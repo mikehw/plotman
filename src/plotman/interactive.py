@@ -143,6 +143,24 @@ def curses_main(stdscr):
 
                 archdir_freebytes = archive.get_archdir_freebytes(cfg.directories.archive)
 
+            # TODO: Introduce configuration
+            if True:
+                kill_job_after = 13 * 60 * 60  # 13 hours for me
+                stalled_jobs = [j for j in jobs if j.get_time_wall() > kill_job_after]
+                for job in stalled_jobs:
+                    log.log('plan to kill: ' + job.plot_id_prefix())
+                    # First suspend so job doesn't create new files
+                    log.log('Pausing PID %d, plot id %s' % (job.proc.pid, job.plot_id))
+                    job.suspend()
+
+                    temp_files = job.get_temp_files()
+                    log.log('Will kill pid %d, plot id %s' % (job.proc.pid, job.plot_id))
+                    log.log('Will delete %d temp files' % len(temp_files))
+                    log.log('killing...')
+                    job.cancel()
+                    log.log('cleaning up temp files...')
+                    for f in temp_files:
+                        os.remove(f)
 
         # Get terminal size.  Recommended method is stdscr.getmaxyx(), but this
         # does not seem to work on some systems.  It may be a bug in Python
