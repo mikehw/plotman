@@ -334,6 +334,23 @@ class Job:
         for f in self.proc.open_files():
             if self.tmpdir in f.path or self.tmp2dir in f.path or self.dstdir in f.path:
                 temp_files.add(f.path)
+        with os.scandir(self.tmpdir) as it:
+            for entry in it:
+                if self.plot_id in entry.name:
+                    try:
+                        temp_files.add(entry.path)
+                    except FileNotFoundError:
+                        # The file might disappear
+                        pass
+        if self.tmp2dir:
+            with os.scandir(self.tmp2dir) as it:
+                for entry in it:
+                    if self.plot_id in entry.name:
+                        try:
+                            temp_files.add(entry.path)
+                        except FileNotFoundError:
+                            # The file might disappear
+                            pass
         return temp_files
 
     def cancel(self):
